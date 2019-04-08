@@ -1,0 +1,22 @@
+{
+  "name": "1final",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "Lien Ho Hoang",
+  "license": "ISC",
+  "dependencies": {
+    "bcrypt": "^3.0.5",
+    "express": "^4.16.4",
+    "express-mongo-sanitize": "^1.3.2",
+    "jsonwebtoken": "^8.5.1",
+    "mongoose": "^5.4.20",
+    "mongoose-unique-validator": "^2.0.2",
+    "validator": "^10.11.0",
+    "xss": "^1.0.6"
+  }
+}
