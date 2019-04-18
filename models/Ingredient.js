@@ -26,7 +26,8 @@ const schema = new mongoose.Schema({
   },
   categories: [{
     type: String,
-    enum:['meat', 'spicy', 'vegitarian', 'vegan', 'halal', 'kosher', 'cheeze', 'seasonings'] 
+    enum:['meat', 'spicy', 'vegitarian', 'vegan', 'halal', 'kosher', 'cheeze', 'seasonings'],
+    lowercase: true
   }]
 })
 

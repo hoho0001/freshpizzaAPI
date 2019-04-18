@@ -1,0 +1,11 @@
+{
+  "name": "My Application",
+  "db": {
+    "host": "localhost",
+    "port": "27017",
+    "dbName": "FreshPizza"
+  },
+  "jwt": {
+    "saltRounds": 14
+  }
+}

@@ -1,36 +1,45 @@
 const ResourceNotFoundError = require('../exceptions/ResourceNotFound')
 const sanitizeBody = require('../middleware/sanitizeBody')
+const mongoose = require('mongoose');
+const Pizza = require('../models/Pizza')
 
-// const auth = require('../middleware/auth')
-// const admin = require('../middleware/isStaff')
+const auth = require('../middleware/auth')
+const isStaff = require('../middleware/isStaff')
 const Order = require('../models/Order')
+const User = require('../models/User')
+
 const express = require('express')
 const router = express.Router()
 
-router.get('/', async (req, res) => {
-  const orders = await Order.find().populate('pizzas')
+// STAFF: get ALL orders; User: get his orders - Tested: OK
+router.get('/', auth, async (req, res) => {
+  let query = ((req.user.isStaff)? {} : {customer: req.user._id})
+
+  const orders = await Order.find(query)
+  
   res.send({data: orders})
 })
 
-router.post('/',sanitizeBody, async (req, res, next) => {
-  const customer = await Customer.findById(req.body.customer);
-  if (!customer) return res.status(400).send('Invalid customer.');
+// USER: Create an order  - Tested: OK
+router.post('/', [auth, sanitizeBody], async (req, res, next) => {
 
-  new Order(req.sanitizedBody)
+    new Order(req.sanitizedBody)
     .save()
-    .then(newOrder => {
-      console.log("newOrder")
-      console.log(newOrder)
-      res.status(201).send({data: newOrder})})
+    .then(newOrder => { res.status(201).send({data: newOrder})})
     .catch (next)
+
 })
 
-router.get('/:id', async (req, res) => {
+// USER: Get detail for an order: Tested: OK
+router.get('/:id', auth, async (req, res, next) => {
   try {
-    const order = await Order.findById(req.params.id).populate('pizzas')
-    
+    await validateId(req.params.id)
+    let query = ((req.user.isStaff)? {_id: req.params.id} : {_id: req.params.id, customer: req.user._id})
+
+    const order = await Order.findOne(query)
+  
     if (!order) throw new ResourceNotFoundError(
-      `We could not find a order with id: ${req.params.id}`
+      `We could not find an order with id: ${req.params.id}`
     )
     res.send({data: order})
   } catch (err) {
@@ -38,10 +47,16 @@ router.get('/:id', async (req, res) => {
   }
 })
 
-const update = (overwrite = false) => async (req, res) => {
+// USER: Edit an order: Tested: OK
+
+const update = (overwrite = false) => async (req, res, next) => {
   try {
-    const order = await Order.findByIdAndUpdate(
-      req.params.id,
+    await validateId(req.params.id)
+    // if isStaff: can edit any order; User: can edit only his order
+    let query = ((req.user.isStaff)? {_id: req.params.id} : {_id: req.params.id, customer: req.user._id})
+    
+    const order = await Order.findOneAndUpdate(
+      query,
       req.sanitizedBody,
       {
         new: true,
@@ -50,37 +65,50 @@ const update = (overwrite = false) => async (req, res) => {
       }
     )
     if (!order) throw new ResourceNotFoundError(
-      `We could not find a order with id: ${req.params.id}`
+      `We could not find your order with id: ${req.params.id}`
     )
+    
     res.send({data: order})
   } catch (err) {
     next(err)
   }
 }
-router.put('/:id',  update((overwrite = true)))
-router.patch('/:id',  update((overwrite = false)))
+// USER: edit an order
+router.put('/:id', [auth, sanitizeBody], update((overwrite = true)))
+router.patch('/:id', [auth, sanitizeBody], update((overwrite = false)))
 
-router.delete('/:id', async (req, res) => {
+// USER: cancel an Order: Tested: OK
+router.delete('/:id', [auth, sanitizeBody], async (req, res, next) => {
   try {
-    const order = await Order.findByIdAndRemove(req.params.id)
+    await validateId(req.params.id)
+    // if isStaff: can cancel any order; User: can cancel only his order
+    let query = ((req.user.isStaff)? {_id: req.params.id} : {_id: req.params.id, customer: req.user._id})
+
+    const order = await Order.findOneAndRemove(query)
+
     if (!order) throw new ResourceNotFoundError(
-      `We could not find a order with id: ${req.params.id}`
+      `We could not find your order with id: ${req.params.id}`
     )
     res.send({data: order})
   } catch (err) {
     next(err)
   }
 })
-router.delete('/', async (req, res) => {
-  try {
-    const order = await Order.deleteMany()
-    if (!order) throw new ResourceNotFoundError(
-      `We could not find a order with id: ${req.params.id}`
-    )
-    res.send({data: order})
-  } catch (err) {
-    next(err)
+
+
+// Helper functions
+const validateId = async id => {
+  if (mongoose.Types.ObjectId.isValid(id)) {
+    if (await Order.countDocuments({_id: id})) return true
   }
-})
+  throw new ResourceNotFoundError(`Could not find an order with id ${id}`)
+}
+
+const validateCustomer = async id => {
+  if (mongoose.Types.ObjectId.isValid(id)) {
+    if (await User.countDocuments({_id: id})) return true
+  }
+  throw new ResourceNotFoundError(`Could not find a Customer with id ${id}`)
+}
 
 module.exports = router

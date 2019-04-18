@@ -1,10 +1,10 @@
 const mongoose = require('mongoose')
-const Pizza = require('../models/Pizza')
 
 const schema = new mongoose.Schema({
   customer: {
     type: mongoose.Schema.Types.ObjectId, 
-    ref: 'User'},
+    ref: 'User',
+    required: true},
   type: {
     type: String,
     trim: true,
@@ -50,53 +50,33 @@ const schema = new mongoose.Schema({
 { timestamps: true})
 
 
-schema.pre('save', async function(next) {
+schema.pre('save', async function() {
   
   //all orders are subject the Ontario HST rate of 13%. 
-  //The order price, tax and total should be automatically calculated on save.
-  //this.populate('pizzas').exec(Populate)
-  this.populatePizza()
+  await this.updatePrice()
 
 })
+schema.post('findOneAndUpdate', async function(doc){
+  if (doc){
+    await doc.save()
+  }
+})
 
-schema.methods.updatePrice =  function(){ 
-  this.price =  this.pizzas.reduce(function(total, pizza){
-    return total + pizza.price
-  },0)
+schema.methods.updatePrice =  async function(){ 
+  await this.populatePizza()
+  this.price = await this.pizzas.reduce(reducer,0)
+  
   this.tax = this.price * 0.13
   this.total = this.price + this.tax + this.deliveryCharge
 }
 
 schema.methods.populatePizza = async function() {
    await this.populate('pizzas').execPopulate()
-   this.updatePrice()
 }
 
-schema.methods.updatePrice1 = function(){
-  let order = this
-  let temp = order.pizzas.map(product => {
-    return { _id: mongoose.Types.ObjectId(product) }
-  })
-  let total = 0
-  let promises = Pizza.find({ _id: { $in: temp } }).exec()
-  promises
-    .then(data => {
-      data.forEach(product => {
-        total += product.price
-      })
-      order.price = total
-      order.tax = total * 0.13
-      order.total = order.price + order.tax + order.deliveryCharge
-      next()
-    })
-    .catch(err => {
-      console.error(err)
-    })
-}
 
+const reducer = (total, item) => total + item.price
 
 const Model = mongoose.model('Order', schema)
 
 module.exports = Model
-
-

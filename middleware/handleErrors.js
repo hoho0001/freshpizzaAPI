@@ -8,6 +8,7 @@ const formatValidationErrors = errors => {
   }))
 }
 
+
 module.exports = (err, req, res, next) => {
   const isValidationError =
     err.hasOwnProperty('name') && err.name === 'ValidationError'
@@ -17,3 +18,5 @@ module.exports = (err, req, res, next) => {
 
   res.status(code).send({errors: payload})
 }
+
+

@@ -1,16 +1,24 @@
-const mongoose = require('mongoose')
+const config = require('config')
+const logger = require('./logger')
 
 module.exports = () => {
+  const mongoose = require('mongoose')
+  const dbConfig = config.get('db')
+
+  // const credentials =
+  //   process.env.NODE_ENV === 'production'
+  //   ? `${dbConfig.username}:${dbConfig.password}@`
+  //   : ''
+
   mongoose
-    .connect(
-      `mongodb://localhost:27017/FreshPizza`,
-      { useNewUrlParser: true }
-    )
+    .connect(`mongodb://${dbConfig.host}:${dbConfig.port}/${dbConfig.dbName}`, {
+      useNewUrlParser: true
+    })
     .then(() => {
-      console.log(`Connected to MongoDB ...`)
+      logger.log('info', `Connected to MongoDB ...`)
     })
     .catch(err => {
-      console.log(`Error connecting to MongoDB ...`, err)
+      logger.log('error', `Error connecting to MongoDB ...`, err)
       process.exit(1)
     })
 }

@@ -1,7 +1,6 @@
 const mongoose = require('mongoose')
 const Ingredient = require('../models/Ingredient')
 
-
 const schema = new mongoose.Schema({
   name: { 
     type: String, 
@@ -32,61 +31,46 @@ const schema = new mongoose.Schema({
 })
 
 
-schema.pre('save', async function(next) {
-  let newPizza = this
-  
-  let temp = newPizza.ingredients.map(product => {
-    return { _id: mongoose.Types.ObjectId(product) }
-  }).concat(newPizza.extraToppings.map(product => {
-    return { _id: mongoose.Types.ObjectId(product) }
-  }))
-  
-  let total = 0
-  let promises = await Ingredient.find({ _id: { $in: temp } })
-  
-  promises.forEach(product => {
-        total += product.price
-      })
-  newPizza.price = parseInt(total)
-  
-  console.log(newPizza)
-  next()
+schema.pre('save', async function() {
+  await this.updatePrice()
 })
 
+schema.post('findByIdAndUpdate', async function(doc){
+  doc.save()
+})
 
 const reducer = (total, item) => total + item.price
 
-
-schema.methods.populateIngredients = async function() {
-  await this.populate('extraToppings').execPopulate()
-
-  //  await this.populate('extraToppings').execPopulate()
-  // this.price =  
-  console.log(await this.ingredients.reduce(reducer,0))
-  //  + await this.extraToppings.reduce(reducer,0)
+schema.methods.populateIngredients = async  function() {
+  await this.populate('ingredients').populate('extraToppings').execPopulate()
 }
 
-schema.methods.updatePrice = function(){
-  let temp = this.ingredients.map(product => {
-    return { _id: mongoose.Types.ObjectId(product) }
-  }).concat(this.extraToppings.map(product => {
-    return { _id: mongoose.Types.ObjectId(product) }
-  }))
+schema.methods.updatePrice = async function(){
+  await this.populateIngredients()
+  this.price = await this.ingredients.reduce(reducer,0) + this.extraToppings.reduce(reducer,0)
+}
 
-  let total = 0
-  let promises = Ingredient.find({ _id: { $in: temp } }).exec()
-  promises
-    .then(data => {
-      data.forEach(product => {
-        total += product.price
-      })
-      newPizza.price = total
-      console.log(this)
-      next()
-    })
-    .catch(err => {
-      console.error(err)
-    })
+schema.methods.updatePrice_Old = function(){
+  // let temp = this.ingredients.map(product => {
+  //   return { _id: mongoose.Types.ObjectId(product) }
+  // }).concat(this.extraToppings.map(product => {
+  //   return { _id: mongoose.Types.ObjectId(product) }
+  // }))
+
+  // let total = 0
+  // let promises = Ingredient.find({ _id: { $in: temp } }).exec()
+  // promises
+  //   .then(data => {
+  //     data.forEach(product => {
+  //       total += product.price
+  //     })
+  //     newPizza.price = total
+  //     console.log(this)
+  //     next()
+  //   })
+  //   .catch(err => {
+  //     console.error(err)
+  //   })
 }
 
 

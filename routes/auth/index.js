@@ -1,4 +1,4 @@
-const authorize = require('../../middleware/auth')
+const auth = require('../../middleware/auth')
 const sanitizeBody = require('../../middleware/sanitizeBody')
 const User = require('../../models/User')
 const express = require('express')
@@ -16,7 +16,8 @@ router.post('/users', sanitizeBody, async (req, res, next) => {
 // Login a user and return an authentication token.
 router.post('/tokens', sanitizeBody, async (req, res, next) => {
   const {email, password} = req.sanitizedBody
-  
+  const user = await User.authenticate(email, password)
+
   if (!user) {
     return res.status(401).send({errors: [{
       status: 'Unauthorized',
@@ -27,13 +28,14 @@ router.post('/tokens', sanitizeBody, async (req, res, next) => {
   res.status(201).send({data: {token: user.generateAuthToken()}})
 })
 
-
-router.get('/users/me',authorize, async (req, res) => {
+// Get Logged-in User
+router.get('/users/me', auth, async (req, res) => {
   const user = await User.findById(req.user._id)
   res.send({data: user})
 })
 
-router.patch('/users/me',authorize, async (req, res) => {  //change password
+// Update Password
+router.patch('/users/me', auth, async (req, res) => {  
   try{
     const user = await User.findById(req.user._id)
     user.password = req.body.password
