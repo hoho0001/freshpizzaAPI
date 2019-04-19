@@ -10,7 +10,7 @@ const router = express.Router()
 
 // List All Ingredients
 router.get('/', async (req, res) => {
-  const instock = (req.query.instock == "true")? {quantity: {$gt: 10}} : ((req.query.instock == "false")? {quantity: {$lte: 0}} : {})
+  const instock = (req.query.instock == "true")? {quantity: {$gt: 0}} : ((req.query.instock == "false")? {quantity: {$lte: 0}} : {})
   const ingredients = await Ingredient.find(instock)
   
   res.send({data: ingredients})

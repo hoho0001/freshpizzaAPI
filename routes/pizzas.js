@@ -9,18 +9,23 @@ const Pizza = require('../models/Pizza')
 const express = require('express')
 const router = express.Router()
 
-// List all available pizzas. Ingredients not populated : OK
+// List all available pizzas. Ingredients not populated; inStock = true, false. Ingredients ARE populated 
 router.get('/', async (req, res) => {
-  // const instock = (req.query.instock == "true")? {ingredients.quantity: {$gt: 10}} : ((req.query.instock == "false")? {ingredients.quantity: {$lte: 0}} : {})
+  let pizzasAll
+  let pizzas
+  if (req.query.instock == "true"){
+    pizzasAll = await Pizza.find().populate('ingredients','quantity').populate('extraToppings', 'quantity')
+    pizzas = await pizzasAll.filter(checkInstock)
+  } else if (req.query.instock == "false"){
+    pizzasAll = await Pizza.find().populate('ingredients','quantity').populate('extraToppings', 'quantity')
 
-  const pizzas = await Pizza
-  .find({})
-  // .populate('ingredients','quantity')
-  // .populate('extraToppings', 'quantity')
-  // .and([{"ingredients.quantity": {"$gt": 0}}])
+    pizzas = await pizzasAll.filter(checkOutstock)
 
+  } else pizzas = await Pizza.find()
+  
   res.send({data: pizzas})
 })
+
 
 // STAFF: Add a Pizza: 
 router.post('/', [auth, isStaff, sanitizeBody], async (req, res, next) => {
@@ -142,7 +147,12 @@ const validateId = async id => {
   throw new ResourceNotFoundError(`Could not find a pizza with id ${id}`)
 }
 
-
+const checkInstock = pizza => {
+  return !(pizza.ingredients.find(item => item.quantity < 0) || pizza.extraToppings.find(item => item.quantity < 0))
+}
+const checkOutstock = pizza => {
+  return (pizza.ingredients.find(item => item.quantity < 0) || pizza.extraToppings.find(item => item.quantity < 0))
+}
 
 
 module.exports = router
