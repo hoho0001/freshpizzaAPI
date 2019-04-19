@@ -19,8 +19,6 @@ router.get('/', async (req, res) => {
   // .populate('extraToppings', 'quantity')
   // .and([{"ingredients.quantity": {"$gt": 0}}])
 
-
-
   res.send({data: pizzas})
 })
 
@@ -97,7 +95,7 @@ router.delete('/:id', [auth, isStaff], async (req, res, next) => {
 const checkIngredients = async function(req,res){
   if (req.body.ingredients) {
     for (let i = 0; i < req.body.ingredients.length; i++) {
-      if (mongoose.Types.ObjectId.isValid(eq.body.ingredients[i])){
+      if (mongoose.Types.ObjectId.isValid(req.body.ingredients[i])){
         const ingredients =  await Ingredient.findById(req.body.ingredients[i]);
         if (!ingredients) throw new ResourceNotFoundError(`Could not find an ingredient with id ${id}`);
         if (ingredients.quantity <= 0) return res.status(400).send('Ingredient not in stock.');
@@ -109,7 +107,7 @@ const checkIngredients = async function(req,res){
   if (req.body.extraToppings) {
     console.log('check ')
     for (let i = 0; i < req.body.extraToppings.length; i++) {
-      if (mongoose.Types.ObjectId.isValid(id)){
+      if (mongoose.Types.ObjectId.isValid(req.body.extraToppings[i])){
         const ingredients =  await Ingredient.findById(req.body.extraToppings[i]);
         if (!ingredients) throw new ResourceNotFoundError(`Could not find an ingredient with id ${id}`);
         if (ingredients.quantity <= 0) return res.status(400).send('Ingredient not in stock.');
@@ -118,6 +116,7 @@ const checkIngredients = async function(req,res){
     }
   }
 }
+
 const updateIngredients = async function(req){
   if (req.body.ingredients) {
     for (let i = 0; i < req.body.ingredients.length; i++) {

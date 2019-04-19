@@ -1,13 +1,21 @@
+const ResourceNotFoundError = require('../../exceptions/ResourceNotFound')
 const auth = require('../../middleware/auth')
 const sanitizeBody = require('../../middleware/sanitizeBody')
 const User = require('../../models/User')
+const isStaff = require('../../middleware/isStaff')
+const mongoose = require('mongoose');
+
+
 const express = require('express')
 const router = express.Router()
 
 
 // Register a new user
 router.post('/users', sanitizeBody, async (req, res, next) => {
-  new User(req.sanitizedBody)
+  // Ignore isStaff in request.
+
+  const { isStaff, ...attributes } = req.sanitizedBody
+  new User(attributes)
     .save()
     .then(newUser => res.status(201).send({data: newUser}))
     .catch(next)
@@ -48,9 +56,29 @@ router.patch('/users/me', auth, async (req, res) => {
   
 })
 
-//or we can call save() in post('findByIdAndUpdate')
-// schema.post('findByIdAndUpdate', async function(doc) {
-// await doc.save()
-//}
+// Staff Registration - set isStaff for other users ---- OK
+router.patch('/users/:id', [auth, isStaff, sanitizeBody], async (req, res, next) => {  
+  try{
+    await validateId(req.params.id)
+    
+
+    const user = await User.findById(req.params.id)
+    user.isStaff = true
+    await user.save()
+
+    res.send({data: user})
+  } catch (err) {
+    next(err)
+  }
+  
+})
+
+// Helper functions
+const validateId = async id => {
+  if (mongoose.Types.ObjectId.isValid(id)) {
+    if (await User.countDocuments({_id: id})) return true
+  }
+  throw new ResourceNotFoundError(`Could not find an user with id ${id}`)
+}
 
 module.exports = router

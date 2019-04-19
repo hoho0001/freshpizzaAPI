@@ -5,10 +5,10 @@ module.exports = () => {
   const mongoose = require('mongoose')
   const dbConfig = config.get('db')
 
-  // const credentials =
-  //   process.env.NODE_ENV === 'production'
-  //   ? `${dbConfig.username}:${dbConfig.password}@`
-  //   : ''
+  const credentials =
+    process.env.NODE_ENV === 'production'
+    ? `${dbConfig.username}:${dbConfig.password}@`
+    : ''
 
   mongoose
     .connect(`mongodb://${dbConfig.host}:${dbConfig.port}/${dbConfig.dbName}`, {
