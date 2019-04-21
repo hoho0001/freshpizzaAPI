@@ -11,7 +11,7 @@ module.exports = () => {
     : ''
 
   mongoose
-    .connect(`mongodb://${dbConfig.host}:${dbConfig.port}/${dbConfig.dbName}`, {
+    .connect(`mongodb://${credentials}${dbConfig.host}:${dbConfig.port}/${dbConfig.dbName}?authSource=admin`, {
       useNewUrlParser: true
     })
     .then(() => {

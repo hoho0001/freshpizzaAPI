@@ -2,7 +2,7 @@ const uniqueValidator = require('mongoose-unique-validator')
 const validator = require('validator')
 const jwt = require('jsonwebtoken')
 const mongoose = require('mongoose')
-const bcrypt = require('bcrypt')
+const bcrypt = require('bcryptjs')
 
 const saltRounds = 14
 

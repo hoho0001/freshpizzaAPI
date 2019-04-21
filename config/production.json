@@ -1,3 +1,8 @@
 {
-
+  "db": {
+    "host": "mongodb.mad9124.rocks",
+    "user": "hoho0001-banh0006",
+    "password": "hus87zwuwkg8aa1wea1c0zm62ti5x1",
+    "dbName": "final-hoho0001-banh0006"
+  }
 }
