@@ -7,7 +7,7 @@ module.exports = () => {
 
   const credentials =
     process.env.NODE_ENV === 'production'
-    ? `${dbConfig.username}:${dbConfig.password}@`
+    ? `${dbConfig.user}:${dbConfig.password}@`
     : ''
 
   mongoose
