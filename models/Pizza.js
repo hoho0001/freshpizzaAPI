@@ -35,7 +35,7 @@ schema.pre('save', async function() {
   await this.updatePrice()
 })
 
-schema.post('findByIdAndUpdate', async function(doc){
+schema.post('findOneAndUpdate', async function(doc){
   doc.save()
 })
 
