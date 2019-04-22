@@ -42,7 +42,7 @@ router.post('/', [auth, isStaff, sanitizeBody], async (req, res, next) => {
 })
 
 // Get details for a pizza.	Ingredients fully populated: OK
-router.get('/:id', auth, async (req, res, next) => {
+router.get('/:id', async (req, res, next) => {
   try {
     await validateId(req.params.id)
     const pizza = await Pizza.findById(req.params.id).populate('ingredients').populate('extraToppings')

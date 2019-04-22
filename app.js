@@ -10,6 +10,7 @@ const app = express()
 const sanitizeMongo = require('express-mongo-sanitize')
 
 app.use(cors())  //apply CORS as the first middleware 
+
 // attemtp to compress all routes
 app.use(compression())
 app.use(helmet())
