@@ -60,7 +60,7 @@ const update = (overwrite = false) => async (req, res, next) => {
   try {
     await validateId(req.params.id)
     const pizza = await Pizza.findOneAndUpdate(
-      req.params.id,
+      {_id: req.params.id},
       req.sanitizedBody,
       {
         new: true,
